@@ -1,11 +1,13 @@
 /** @type {import('next').NextConfig} */
-const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:8000";
+const BACKEND_URL = process.env.BACKEND_URL;
 
 const nextConfig = {
   reactStrictMode: true,
-  // Proxy all /api/* requests to the FastAPI backend.
-  // The browser never talks directly to port 8000 — no CORS issues.
+  // In local dev, proxy /api/* to the FastAPI server via BACKEND_URL.
+  // On Vercel (BACKEND_URL not set), the Python function at api/index.py
+  // handles /api/* natively — no rewrite needed.
   async rewrites() {
+    if (!BACKEND_URL) return [];
     return [
       {
         source: "/api/:path*",
