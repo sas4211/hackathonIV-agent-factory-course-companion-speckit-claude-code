@@ -1,0 +1,30 @@
+{
+  "test_user_lesson_xyz": {
+    "user_id": "test_user_lesson_xyz",
+    "completed_lessons": [
+      "ch01-l01"
+    ],
+    "completed_chapters": [],
+    "quiz_scores": {}
+  },
+  "test_user_quiz_xyz": {
+    "user_id": "test_user_quiz_xyz",
+    "completed_lessons": [],
+    "completed_chapters": [],
+    "quiz_scores": {
+      "ch01": {
+        "score": 3,
+        "total": 3,
+        "passed": true
+      }
+    }
+  },
+  "demo_user": {
+    "user_id": "demo_user",
+    "completed_lessons": [
+      "ch01-l01"
+    ],
+    "completed_chapters": [],
+    "quiz_scores": {}
+  }
+}

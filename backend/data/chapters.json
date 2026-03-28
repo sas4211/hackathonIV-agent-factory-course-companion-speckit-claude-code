@@ -1,0 +1,137 @@
+[
+  {
+    "id": "ch01",
+    "title": "Introduction to AI Agents",
+    "order": 1,
+    "is_free": true,
+    "summary": "Understand what AI agents are, how they differ from chatbots and pipelines, and why the shift to agentic AI is the most important architecture change in modern software development.",
+    "next_chapter_id": "ch02",
+    "prev_chapter_id": null
+  },
+  {
+    "id": "ch02",
+    "title": "The Claude Agent SDK",
+    "order": 2,
+    "is_free": true,
+    "summary": "Get hands-on with Anthropic's Agent SDK. Learn how to install it, define tools with automatic schema generation, wire up memory, and run your first working agent in under 30 lines of code.",
+    "next_chapter_id": "ch03",
+    "prev_chapter_id": "ch01"
+  },
+  {
+    "id": "ch03",
+    "title": "Model Context Protocol (MCP)",
+    "order": 3,
+    "is_free": true,
+    "summary": "Master MCP — the open standard that lets any agent connect to any tool without custom glue code. Learn the host/server/transport architecture and build a fully functional MCP server from scratch.",
+    "next_chapter_id": "ch04",
+    "prev_chapter_id": "ch02"
+  },
+  {
+    "id": "ch04",
+    "title": "Agent Skills",
+    "order": 4,
+    "is_free": false,
+    "summary": "Go beyond individual tools. Learn how to package capabilities into reusable Skill modules with their own instructions, compose multiple skills on a single agent, and design skill libraries your whole team can share.",
+    "next_chapter_id": "ch05",
+    "prev_chapter_id": "ch03"
+  },
+  {
+    "id": "ch05",
+    "title": "Building & Deploying Agents",
+    "order": 5,
+    "is_free": false,
+    "summary": "Ship production-ready agents. Covers trajectory testing, eval harnesses, Docker packaging, cloud deployment, structured observability, and battle-tested guardrails that keep agents safe at scale.",
+    "next_chapter_id": "ch06",
+    "prev_chapter_id": "ch04"
+  },
+  {
+    "id": "ch06",
+    "title": "Multi-Agent Systems & Orchestration",
+    "order": 6,
+    "is_free": false,
+    "summary": "Scale beyond a single agent. Learn the orchestrator-worker pattern, build an orchestrator that delegates tasks to specialist subagents, and master fan-out/fan-in execution for parallel workloads.",
+    "next_chapter_id": "ch07",
+    "prev_chapter_id": "ch05"
+  },
+  {
+    "id": "ch07",
+    "title": "Memory & State Management",
+    "order": 7,
+    "is_free": false,
+    "summary": "Give your agents genuine long-term memory. Understand the four types of agent memory, implement semantic search with vector databases, and design state machines for agents that run across multiple sessions.",
+    "next_chapter_id": "ch08",
+    "prev_chapter_id": "ch06"
+  },
+  {
+    "id": "ch08",
+    "title": "Agent Security & Safety",
+    "order": 8,
+    "is_free": false,
+    "summary": "Understand and defend against the unique threats that AI agents face. Covers prompt injection, tool privilege abuse, data exfiltration, input/output validation, and responsible deployment practices.",
+    "next_chapter_id": "ch09",
+    "prev_chapter_id": "ch07"
+  },
+  {
+    "id": "ch09",
+    "title": "Advanced Prompt Engineering for Agents",
+    "order": 9,
+    "is_free": false,
+    "summary": "Go beyond basic system prompts. Learn the five-component architecture of production prompts, manage context windows as a scarce resource, and use few-shot examples and chain-of-thought to dramatically improve reasoning quality.",
+    "next_chapter_id": "ch10",
+    "prev_chapter_id": "ch08"
+  },
+  {
+    "id": "ch10",
+    "title": "Production Case Studies",
+    "order": 10,
+    "is_free": false,
+    "summary": "Learn from real production agents. Two detailed case studies — a code review agent and a data analysis agent — show how every concept in this course comes together in systems that serve real users at scale.",
+    "next_chapter_id": "ch11",
+    "prev_chapter_id": "ch09"
+  },
+  {
+    "id": "ch11",
+    "title": "Agentic RAG & Knowledge Systems",
+    "order": 11,
+    "is_free": false,
+    "summary": "Go beyond basic vector search. Learn hybrid retrieval, cross-encoder re-ranking, structured document processing, and how to build a production knowledge pipeline that stays fresh and auditable.",
+    "next_chapter_id": "ch12",
+    "prev_chapter_id": "ch10"
+  },
+  {
+    "id": "ch12",
+    "title": "Agent Evaluation & Benchmarking",
+    "order": 12,
+    "is_free": false,
+    "summary": "Measure what matters. Design robust eval frameworks, write calibrated LLM-as-judge rubrics, and build continuous evaluation pipelines that catch regressions before they reach users.",
+    "next_chapter_id": "ch13",
+    "prev_chapter_id": "ch11"
+  },
+  {
+    "id": "ch13",
+    "title": "Streaming & Real-Time Agents",
+    "order": 13,
+    "is_free": false,
+    "summary": "Build agents that feel instant. Implement response streaming, profile and eliminate latency bottlenecks, and design event-driven agents that react to webhooks and real-time data sources.",
+    "next_chapter_id": "ch14",
+    "prev_chapter_id": "ch12"
+  },
+  {
+    "id": "ch14",
+    "title": "Fine-Tuning & Model Specialization",
+    "order": 14,
+    "is_free": false,
+    "summary": "Know when and how to go beyond prompting. Learn the fine-tuning decision framework, collect high-quality trajectory data, train with DPO, and evaluate specialised models rigorously before deployment.",
+    "next_chapter_id": "ch15",
+    "prev_chapter_id": "ch13"
+  },
+  {
+    "id": "ch15",
+    "title": "Capstone: Shipping Your Agent",
+    "order": 15,
+    "is_free": false,
+    "summary": "Bring everything together. Design a multi-tenant agent SaaS, understand the emerging agent developer career and toolchain, and apply the course framework to your own capstone project.",
+    "next_chapter_id": null,
+    "prev_chapter_id": "ch14"
+  }
+]

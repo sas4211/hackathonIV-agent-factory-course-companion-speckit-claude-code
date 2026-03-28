@@ -1,0 +1,575 @@
+openapi: "3.1.0"
+info:
+  title: Course Companion API
+  description: >
+    Backend for the Course Companion Custom GPT.
+    Phase 1: deterministic content delivery, navigation, keyword search, rule-based quizzes,
+    progress tracking, and freemium access control. Zero LLM calls in Phase 1.
+    Phase 2: hybrid LLM features (adaptive learning path, written assessment grading) for Pro subscribers.
+  version: "2.0.0"
+
+servers:
+  - url: https://your-deployment-url.com
+    description: Production server (replace with your deployed URL)
+
+paths:
+
+  /chapters:
+    get:
+      operationId: listChapters
+      summary: List all course chapters
+      description: Returns all chapters with their title, order, and free/paid status.
+      responses:
+        "200":
+          description: List of chapter summaries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChapterSummary"
+
+  /chapters/{chapter_id}:
+    get:
+      operationId: getChapter
+      summary: Get full chapter content
+      description: Returns a chapter with all its lessons. Use this to deliver course content to the student.
+      parameters:
+        - name: chapter_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Chapter identifier (e.g. "ch01", "ch02")
+      responses:
+        "200":
+          description: Chapter with lessons
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Chapter"
+        "404":
+          description: Chapter not found
+
+  /chapters/{chapter_id}/next:
+    get:
+      operationId: nextChapter
+      summary: Navigate to the next chapter
+      description: Returns the chapter that follows the given chapter_id.
+      parameters:
+        - name: chapter_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Next chapter
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Chapter"
+        "404":
+          description: No next chapter or chapter not found
+
+  /chapters/{chapter_id}/previous:
+    get:
+      operationId: previousChapter
+      summary: Navigate to the previous chapter
+      description: Returns the chapter that precedes the given chapter_id.
+      parameters:
+        - name: chapter_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Previous chapter
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Chapter"
+        "404":
+          description: No previous chapter or chapter not found
+
+  /search:
+    get:
+      operationId: searchContent
+      summary: Keyword search across all lesson content
+      description: >
+        Pure string-match search — no LLM. Use this when the student asks
+        a question that might be answered by specific lesson content.
+        Returns ranked results with snippets.
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 2
+          description: Search query (minimum 2 characters)
+      responses:
+        "200":
+          description: Matching lessons sorted by relevance score
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SearchResult"
+        "400":
+          description: Query too short
+
+  /quizzes/{chapter_id}:
+    get:
+      operationId: getQuiz
+      summary: Get quiz questions for a chapter
+      description: >
+        Returns questions and answer options. Correct answers are NOT included —
+        present these to the student and collect their responses before calling submitQuiz.
+      parameters:
+        - name: chapter_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Quiz questions (correct answers hidden)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/QuizQuestion"
+        "404":
+          description: No quiz for this chapter
+
+  /quizzes/{chapter_id}/submit:
+    post:
+      operationId: submitQuiz
+      summary: Submit quiz answers and get results
+      description: >
+        Grades the student's answers deterministically (70% pass threshold).
+        Returns score, pass/fail, and per-question explanations.
+      parameters:
+        - name: chapter_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuizSubmission"
+      responses:
+        "200":
+          description: Quiz result with feedback
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizResult"
+        "404":
+          description: No quiz for this chapter
+
+  /progress/{user_id}:
+    get:
+      operationId: getProgress
+      summary: Get a student's progress
+      description: Returns completed lessons, completed chapters, and quiz scores.
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User progress
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProgress"
+
+    put:
+      operationId: updateProgress
+      summary: Update a student's progress
+      description: >
+        Mark a lesson or chapter as complete, or record a quiz score.
+        Provide at least one of: lesson_id, chapter_id, or quiz_id.
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProgressUpdate"
+      responses:
+        "200":
+          description: Updated user progress
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProgress"
+        "400":
+          description: No update fields provided
+
+  /access/check:
+    get:
+      operationId: checkAccess
+      summary: Check if a student can access a chapter
+      description: >
+        Freemium gate. Free users can access the first 3 chapters only.
+        Premium users have full access. Always call this before delivering
+        paid content to a student.
+      parameters:
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: chapter_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: is_premium
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+          description: Whether the user has a premium subscription
+      responses:
+        "200":
+          description: Access decision with reason
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccessCheckResponse"
+        "404":
+          description: Chapter not found
+
+  /adaptive/learning-path:
+    post:
+      operationId: getAdaptiveLearningPath
+      summary: Get a personalised learning path (Pro only)
+      description: >
+        [PHASE 2 — PRO TIER] Analyses the student's progress across all chapters
+        and generates a personalised learning path with prioritised recommendations.
+        Requires tier "pro" or "team". Returns cost tracking fields.
+        Why LLM: requires reasoning over quiz failure patterns, completion velocity,
+        and cross-chapter knowledge dependencies — not achievable with rules.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LearningPathRequest"
+      responses:
+        "200":
+          description: Personalised learning path with recommendations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LearningPathResponse"
+        "402":
+          description: Pro subscription required
+        "503":
+          description: AI service not configured
+
+  /assessment/{chapter_id}/submit:
+    post:
+      operationId: submitWrittenAssessment
+      summary: Grade a student's free-form written answer (Pro only)
+      description: >
+        [PHASE 2 — PRO TIER] Grades the student's free-form written answer with
+        detailed feedback, strengths, gaps, and a hint. Requires tier "pro" or "team".
+        Returns score (0–100), grade label, and cost tracking fields.
+        Why LLM: keyword matching cannot evaluate conceptual accuracy, partial credit,
+        or nuanced misconceptions in free-form answers.
+      parameters:
+        - name: chapter_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Chapter the question is from (e.g. "ch01")
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssessmentRequest"
+      responses:
+        "200":
+          description: Graded assessment with feedback
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssessmentResponse"
+        "400":
+          description: Answer too short
+        "402":
+          description: Pro subscription required
+        "404":
+          description: Chapter not found
+        "503":
+          description: AI service not configured
+
+components:
+  schemas:
+
+    ChapterSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        order:
+          type: integer
+        is_free:
+          type: boolean
+
+    Lesson:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        body:
+          type: string
+        order:
+          type: integer
+
+    Chapter:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        order:
+          type: integer
+        is_free:
+          type: boolean
+        summary:
+          type: string
+        lessons:
+          type: array
+          items:
+            $ref: "#/components/schemas/Lesson"
+        next_chapter_id:
+          type: string
+          nullable: true
+        prev_chapter_id:
+          type: string
+          nullable: true
+
+    SearchResult:
+      type: object
+      properties:
+        chapter_id:
+          type: string
+        chapter_title:
+          type: string
+        lesson_id:
+          type: string
+        lesson_title:
+          type: string
+        snippet:
+          type: string
+        score:
+          type: number
+
+    QuizQuestion:
+      type: object
+      properties:
+        id:
+          type: string
+        question:
+          type: string
+        options:
+          type: array
+          items:
+            type: string
+
+    QuizSubmission:
+      type: object
+      required:
+        - answers
+      properties:
+        answers:
+          type: object
+          description: Map of question_id to chosen option index (0-based)
+          additionalProperties:
+            type: integer
+
+    QuizResult:
+      type: object
+      properties:
+        score:
+          type: integer
+        total:
+          type: integer
+        passed:
+          type: boolean
+        feedback:
+          type: object
+          description: Map of question_id to {correct, chosen_index, correct_index, explanation}
+          additionalProperties:
+            type: object
+
+    ProgressUpdate:
+      type: object
+      properties:
+        lesson_id:
+          type: string
+          nullable: true
+        chapter_id:
+          type: string
+          nullable: true
+        quiz_id:
+          type: string
+          nullable: true
+        quiz_score:
+          type: integer
+          nullable: true
+        quiz_total:
+          type: integer
+          nullable: true
+
+    UserProgress:
+      type: object
+      properties:
+        user_id:
+          type: string
+        completed_lessons:
+          type: array
+          items:
+            type: string
+        completed_chapters:
+          type: array
+          items:
+            type: string
+        quiz_scores:
+          type: object
+          additionalProperties:
+            type: object
+
+    AccessCheckResponse:
+      type: object
+      properties:
+        user_id:
+          type: string
+        chapter_id:
+          type: string
+        has_access:
+          type: boolean
+        reason:
+          type: string
+        is_premium:
+          type: boolean
+
+    LearningPathRequest:
+      type: object
+      required:
+        - user_id
+      properties:
+        user_id:
+          type: string
+        tier:
+          type: string
+          default: "free"
+          description: Subscription tier — "free" | "premium" | "pro" | "team"
+
+    Recommendation:
+      type: object
+      properties:
+        chapter_id:
+          type: string
+        chapter_title:
+          type: string
+        priority:
+          type: string
+          description: '"urgent" | "recommended" | "optional"'
+        reason:
+          type: string
+        action:
+          type: string
+
+    LearningPathResponse:
+      type: object
+      properties:
+        summary:
+          type: string
+        recommendations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Recommendation"
+        next_action:
+          type: string
+        estimated_completion:
+          type: string
+        input_tokens:
+          type: integer
+        output_tokens:
+          type: integer
+        estimated_cost_usd:
+          type: number
+
+    AssessmentRequest:
+      type: object
+      required:
+        - user_id
+        - question
+        - student_answer
+      properties:
+        user_id:
+          type: string
+        tier:
+          type: string
+          default: "free"
+          description: Subscription tier — must be "pro" or "team"
+        question:
+          type: string
+        student_answer:
+          type: string
+
+    AssessmentResponse:
+      type: object
+      properties:
+        score:
+          type: integer
+          description: 0–100
+        grade:
+          type: string
+          description: '"Excellent" | "Good" | "Partial" | "Needs Work"'
+        feedback:
+          type: string
+        strengths:
+          type: array
+          items:
+            type: string
+        gaps:
+          type: array
+          items:
+            type: string
+        hint:
+          type: string
+        input_tokens:
+          type: integer
+        output_tokens:
+          type: integer
+        estimated_cost_usd:
+          type: number

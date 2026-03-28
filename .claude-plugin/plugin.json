@@ -1,0 +1,11 @@
+{
+  "name": "course-companion-factory",
+  "version": "1.0.0",
+  "description": "Agent Factory tools for the Course Companion FTE project — audit, worklog, and phase management skills.",
+  "author": {
+    "name": "Agent Factory Team"
+  },
+  "license": "MIT",
+  "keywords": ["course-companion", "agent-factory", "fastapi", "llm-audit"],
+  "skills": "./skills/"
+}
