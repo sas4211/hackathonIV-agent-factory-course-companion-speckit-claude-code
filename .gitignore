@@ -27,6 +27,7 @@ web/.next/
 web/out/
 web/.env.local
 web/.env.production
+.vercel/
 
 # OS
 .DS_Store
