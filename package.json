@@ -2,6 +2,9 @@
   "name": "course-companion-root",
   "private": true,
   "version": "0.1.0",
+  "scripts": {
+    "vercel-build": "npm run build --workspace=web"
+  },
   "workspaces": [
     "web"
   ],
