@@ -1529,7 +1529,7 @@
   async function loadAdminChapters () {
     const tbody = document.getElementById('adminChaptersBody');
     try {
-      const res  = await fetch('http://localhost:8000/chapters');
+      const res  = await fetch('/api/chapters');
       const list = await res.json();
       tbody.innerHTML = list.map(ch => `
         <tr>
