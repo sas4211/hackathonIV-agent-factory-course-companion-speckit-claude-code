@@ -13,4 +13,4 @@ APP_ENV = os.getenv("APP_ENV", "development")
 FREE_CHAPTER_LIMIT = int(os.getenv("FREE_CHAPTER_LIMIT", "3"))
 
 # Phase 2 — Hybrid Intelligence
-ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")

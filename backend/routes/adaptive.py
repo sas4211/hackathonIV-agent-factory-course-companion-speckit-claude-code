@@ -22,8 +22,8 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-import anthropic
-from config import ANTHROPIC_API_KEY
+import google.generativeai as genai
+from config import GEMINI_API_KEY
 from storage import read
 
 router = APIRouter()
@@ -34,7 +34,7 @@ PROGRESS_FILE = Path(__file__).parent.parent / "data" / "progress.json"
 # ── Models ───────────────────────────────────────────────────────────────────
 
 PRO_TIERS = {"pro", "team"}
-LLM_MODEL  = "claude-sonnet-4-6"   # Phase 2 uses Sonnet (not Haiku)
+LLM_MODEL  = "gemini-1.5-pro"   # Phase 2 uses Gemini Pro
 
 
 class LearningPathRequest(BaseModel):
@@ -141,17 +141,15 @@ Respond with ONLY valid JSON (no markdown, no code fences):
 Rules: max 3 recommendations; only include chapters with clear improvement opportunities; priority must be urgent/recommended/optional."""
 
     # ── LLM call ─────────────────────────────────────────────────────────────
-    client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-    message = client.messages.create(
-        model=LLM_MODEL,
-        max_tokens=700,
-        messages=[{"role": "user", "content": prompt}],
-    )
+    genai.configure(api_key=GEMINI_API_KEY)
+    model = genai.GenerativeModel(LLM_MODEL)
+    response = model.generate_content(prompt)
 
-    input_tokens  = message.usage.input_tokens
-    output_tokens = message.usage.output_tokens
-    # Sonnet 4.6 pricing: $3.00/M input, $15.00/M output
-    cost = round((input_tokens * 0.000003) + (output_tokens * 0.000015), 6)
+    # Extract token usage and cost (approximate)
+    input_tokens = response.usage_metadata.prompt_token_count
+    output_tokens = response.usage_metadata.candidates_token_count
+    # Gemini 1.5 Pro pricing: $0.00125K input, $0.00375K output (per 1K tokens)
+    cost = round((input_tokens * 0.00000125) + (output_tokens * 0.00000375), 6)
 
     # ── Parse response ────────────────────────────────────────────────────────
     raw = message.content[0].text.strip()

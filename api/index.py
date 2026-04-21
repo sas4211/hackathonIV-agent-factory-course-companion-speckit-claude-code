@@ -16,9 +16,9 @@ try:
     app = Starlette(routes=[Mount("/api", app=backend_app)])
     _import_error = None
 
-except Exception:
+except Exception as e:
     _import_error = traceback.format_exc()
-
+    # Fallback to a simple FastAPI app that shows the error
     from fastapi import FastAPI
     from fastapi.responses import JSONResponse
 

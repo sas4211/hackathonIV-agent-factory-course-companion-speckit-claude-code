@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.1.0",
   "scripts": {
+    "dev": "concurrently \"npm:dev:backend\" \"npm:dev:frontend\"",
+    "dev:backend": "cd backend && uvicorn main:app --reload --port 8000",
+    "dev:frontend": "cd web && next dev",
     "vercel-build": "npm run build --workspace=web"
   },
   "workspaces": [
@@ -12,5 +15,8 @@
     "next": "^15.3.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
   }
 }

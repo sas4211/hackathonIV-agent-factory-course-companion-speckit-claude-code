@@ -388,15 +388,16 @@ def check_access(user_id: str, chapter_id: str, is_premium: bool = False) -> dic
 # ═══════════════════════════════════════════════════════════════════════════
 
 _PRO_TIERS = {"pro", "team"}
-_LLM_MODEL = "claude-sonnet-4-6"
+_LLM_MODEL = "gemini-1.5-pro"
 
-def _anthropic_client():
-    """Return an Anthropic client, or raise a clear error if key not set."""
-    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+def _gemini_client():
+    """Configure and return Gemini model, or raise a clear error if key not set."""
+    api_key = os.environ.get("GEMINI_API_KEY", "")
     if not api_key:
-        raise ValueError("ANTHROPIC_API_KEY not set. Add it to .env to use Phase 2 features.")
-    import anthropic as _anthropic
-    return _anthropic.Anthropic(api_key=api_key)
+        raise ValueError("GEMINI_API_KEY not set. Add it to .env to use Phase 2 features.")
+    import google.generativeai as genai
+    genai.configure(api_key=api_key)
+    return genai.GenerativeModel(_LLM_MODEL)
 
 
 # ── Tool: get_adaptive_learning_path ────────────────────────────────────────
@@ -417,7 +418,7 @@ def get_adaptive_learning_path(user_id: str, tier: str = "free") -> dict:
     if tier not in _PRO_TIERS:
         return {"error": "Adaptive learning path requires a Pro subscription ($19.99/mo). Upgrade at /pricing."}
 
-    client = _anthropic_client()
+    client = _gemini_client()
     chapters = read("chapters.json")
     lessons_data = read("lessons.json")
     user_progress = _load_progress().get(user_id, _default_progress(user_id))
@@ -444,10 +445,11 @@ Generate a personalised learning path. Respond ONLY with valid JSON (no fences):
 {{"summary":"2-3 sentence assessment","recommendations":[{{"chapter_id":"ch01","chapter_title":"...","priority":"urgent|recommended|optional","reason":"data-backed reason","action":"specific step"}}],"next_action":"single most important action","estimated_completion":"realistic time estimate"}}
 Max 3 recommendations. Only chapters with clear improvement opportunities."""
 
-    msg = client.messages.create(model=_LLM_MODEL, max_tokens=600,
-                                  messages=[{"role": "user", "content": prompt}])
-    # Sonnet 4.6 pricing: $3.00/M input, $15.00/M output
-    cost = round((msg.usage.input_tokens * 0.000003) + (msg.usage.output_tokens * 0.000015), 6)
+    response = client.generate_content(prompt)
+    # Gemini 1.5 Pro pricing: $0.00125K input, $0.00375K output (per 1K tokens)
+    input_tokens = response.usage_metadata.prompt_token_count
+    output_tokens = response.usage_metadata.candidates_token_count
+    cost = round((input_tokens * 0.00000125) + (output_tokens * 0.00000375), 6)
 
     try:
         result = json.loads(msg.content[0].text.strip())
@@ -487,7 +489,7 @@ def submit_written_assessment(
     if len(student_answer.strip()) < 10:
         return {"error": "Answer too short. Please write at least one complete sentence."}
 
-    client = _anthropic_client()
+    client = _gemini_client()
     chapters = read("chapters.json")
     lessons_data = read("lessons.json")
 
@@ -509,10 +511,11 @@ Grade on accuracy, completeness, terminology, and depth. Respond ONLY with valid
 {{"score":<0-100>,"grade":"<Excellent|Good|Partial|Needs Work>","feedback":"2-4 sentence specific feedback referencing their answer","strengths":["what they got right"],"gaps":["specific gap or misconception"],"hint":"1-2 sentence nudge toward ideal answer"}}
 Scale: Excellent=90-100, Good=70-89, Partial=40-69, Needs Work=0-39."""
 
-    msg = client.messages.create(model=_LLM_MODEL, max_tokens=500,
-                                  messages=[{"role": "user", "content": prompt}])
-    # Sonnet 4.6 pricing: $3.00/M input, $15.00/M output
-    cost = round((msg.usage.input_tokens * 0.000003) + (msg.usage.output_tokens * 0.000015), 6)
+    response = client.generate_content(prompt)
+    # Gemini 1.5 Pro pricing: $0.00125K input, $0.00375K output (per 1K tokens)
+    input_tokens = response.usage_metadata.prompt_token_count
+    output_tokens = response.usage_metadata.candidates_token_count
+    cost = round((input_tokens * 0.00000125) + (output_tokens * 0.00000375), 6)
 
     try:
         result = json.loads(msg.content[0].text.strip())

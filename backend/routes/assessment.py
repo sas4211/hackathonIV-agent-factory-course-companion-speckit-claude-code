@@ -21,14 +21,14 @@ import json
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-import anthropic
-from config import ANTHROPIC_API_KEY
+import google.generativeai as genai
+from config import GEMINI_API_KEY
 from storage import read
 
 router = APIRouter()
 
 PRO_TIERS = {"pro", "team"}
-LLM_MODEL  = "claude-sonnet-4-6"
+LLM_MODEL  = "gemini-1.5-pro"
 
 
 # ── Models ───────────────────────────────────────────────────────────────────
@@ -72,8 +72,8 @@ def submit_assessment(chapter_id: str, request: AssessmentRequest):
             ),
         )
 
-    if not ANTHROPIC_API_KEY:
-        raise HTTPException(status_code=503, detail="AI service not configured (ANTHROPIC_API_KEY missing).")
+    if not GEMINI_API_KEY:
+        raise HTTPException(status_code=503, detail="AI service not configured (GEMINI_API_KEY missing).")
 
     if not request.student_answer or len(request.student_answer.strip()) < 10:
         raise HTTPException(status_code=400, detail="Answer is too short. Please write at least one sentence.")
@@ -128,20 +128,18 @@ Grade scale: Excellent = 90–100, Good = 70–89, Partial = 40–69, Needs Work
 Be encouraging but honest. Reference specific phrases from the student's answer."""
 
     # ── LLM call ─────────────────────────────────────────────────────────────
-    client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-    message = client.messages.create(
-        model=LLM_MODEL,
-        max_tokens=500,
-        messages=[{"role": "user", "content": prompt}],
-    )
+    genai.configure(api_key=GEMINI_API_KEY)
+    model = genai.GenerativeModel(LLM_MODEL)
+    response = model.generate_content(prompt)
 
-    input_tokens  = message.usage.input_tokens
-    output_tokens = message.usage.output_tokens
-    # Sonnet 4.6 pricing: $3.00/M input, $15.00/M output
-    cost = round((input_tokens * 0.000003) + (output_tokens * 0.000015), 6)
+    # Extract token usage and cost (approximate)
+    input_tokens = response.usage_metadata.prompt_token_count
+    output_tokens = response.usage_metadata.candidates_token_count
+    # Gemini 1.5 Pro pricing: $0.00125K input, $0.00375K output (per 1K tokens)
+    cost = round((input_tokens * 0.00000125) + (output_tokens * 0.00000375), 6)
 
     # ── Parse response ────────────────────────────────────────────────────────
-    raw = message.content[0].text.strip()
+    raw = response.text.strip()
     # Strip markdown code fences if the model wrapped the JSON
     if raw.startswith("```"):
         raw = raw.split("```", 2)[1]
