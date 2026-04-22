@@ -18,6 +18,7 @@ try:
     # Vercel routes /api/* to this function.
     # Starlette Mount strips the /api prefix before forwarding to FastAPI.
     app = Starlette(routes=[Mount("/api", app=backend_app)])
+    _import_error = None
 
 except Exception as e:
     _import_error = traceback.format_exc()
@@ -35,5 +36,11 @@ except Exception as e:
 if app is None:
     from fastapi import FastAPI
     app = FastAPI()
+
+# Add a simple test route to verify the backend is working
+if app:
+    @app.get("/test")
+    async def test_endpoint():
+        return {"status": "ok", "message": "Backend is working"}
 
 # Export the app for Vercel
