@@ -8,23 +8,28 @@ import FloatingIcons from "@/components/FloatingIcons";
 import type { AppUser } from "@/lib/types";
 
 // Clerk is optional — import with try/catch for demo mode
-let ClerkProvider: React.ComponentType<{ children: React.ReactNode; publishableKey?: string }> | null = null;
-let SignedIn: React.ComponentType<{ children: React.ReactNode }> | null = null;
-let SignedOut: React.ComponentType<{ children: React.ReactNode }> | null = null;
-let UserButton: React.ComponentType<{ afterSignOutUrl?: string }> | null = null;
-let SignInButton: React.ComponentType<{ mode?: string; children: React.ReactNode }> | null = null;
-let SignUpButton: React.ComponentType<{ mode?: string; children: React.ReactNode }> | null = null;
+let ClerkProvider: any = null;
+let SignedIn: any = null;
+let SignedOut: any = null;
+let UserButton: any = null;
+let SignInButton: any = null;
+let SignUpButton: any = null;
 
 try {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const clerk = require("@clerk/nextjs");
-  ClerkProvider = clerk.ClerkProvider;
-  SignedIn = clerk.SignedIn;
-  SignedOut = clerk.SignedOut;
-  UserButton = clerk.UserButton;
-  SignInButton = clerk.SignInButton;
-  SignUpButton = clerk.SignUpButton;
-} catch {
+
+  // Safely get Clerk components with fallbacks
+  if (clerk) {
+    ClerkProvider = clerk.ClerkProvider || clerk.default?.ClerkProvider;
+    SignedIn = clerk.SignedIn || clerk.default?.SignedIn;
+    SignedOut = clerk.SignedOut || clerk.default?.SignedOut;
+    UserButton = clerk.UserButton || clerk.default?.UserButton;
+    SignInButton = clerk.SignInButton || clerk.default?.SignInButton;
+    SignUpButton = clerk.SignUpButton || clerk.default?.SignUpButton;
+  }
+} catch (error) {
+  console.warn('Clerk not available, running in demo mode:', error.message);
   ClerkProvider = null;
 }
 
